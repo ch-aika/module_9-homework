@@ -1,0 +1,136 @@
+//эта функция будет осуществлять запрос
+function useRequest(url, callback) {
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+
+    xhr.onload = function() {
+        if (xhr.status != 200) {
+            return console.log('Статус ответа: ', xhr.status);
+
+        } else {
+            const result = JSON.parse(xhr.response);
+            if (callback) {
+                return callback(result);
+            }
+        }
+    };
+  
+    xhr.onprogress = function (event) {
+        console.log(`Загружено ${event.loaded} из ${event.total}`)
+    };
+
+    xhr.onerror = function() {
+        console.log('Ошибка! Статус ответа: ', xhr.status);
+    };
+
+    xhr.send();
+};
+ 
+//функция для сборки карточек и вставки на страницу
+//Функция обработки полученного результата
+//apiData - объект с результатом запроса
+function displayResult(apiData) {
+    let cards = '';
+    apiData.forEach(item => {
+        const cardBlock = `
+    <div class="card">
+      <img
+        src="${item.download_url}"
+        class="card-image"
+      />
+      <p>${item.author}</p>
+    </div>
+  `;
+        cards = cards + cardBlock;
+    });
+    resultNode.innerHTML = cards;
+};
+
+//ищем элементы кнопки и блока с результатом
+const btnNode = document.querySelector('.j-btn-request');
+const resultNode = document.querySelector('.j-result');
+const inp1Node = document.querySelector('.j-num');
+const inp2Node = document.querySelector('.j-limit');
+
+
+//вешаем обработчик click на кнопку, который делает запрос с помощью функции useRequest, результат запроса выводит на страницу с помощью фукции displayResult
+btnNode.addEventListener('click', () => {
+   let value1 = document.querySelector('.inp1').value; 
+   let value2 = document.querySelector('.inp2').value; 
+   if (value1 >= 1 && value1 <= 10 && value2 >= 1 && value2 <= 10) {
+      useRequest(`https://picsum.photos/v2/list?page=${value1}&limit=${value2}`, displayResult);
+    } else if (value1 >= 1 && value1 <= 10 && (value2 < 1 || value2 > 10 || !isNaN(value2))) {
+      const error_of_inp1 = `
+      <div class="card">
+      <p>Лимит вне диапазона от 1 до 10</p>
+      </div>`;
+      resultNode.innerHTML = error_of_inp1
+     } else if ((value2 >= 1 && value2 <= 10) && (value1 < 1 || value1 > 10 || !isNaN(value1))) {
+       const error_of_inp2 = `
+       <div class="card">
+       <p>Номер страницы вне диапазона от 1 до 10</p>
+       </div>`;
+       resultNode.innerHTML = error_of_inp2
+     } else {
+        const error = `
+        <div class="card">
+        <p>Номер страницы и лимит вне диапазона от 1 до 10</p>
+        </div>`;
+        resultNode.innerHTML = error
+     }
+  });
+
+ inp1Node.setAttribute("onclick", "localStorage.removeItem('item1');item1.value=''");
+    item1.value = localStorage.getItem('item1');
+    item1.onInput = () => {
+        localStorage.setItem('item1', item1.value)
+    };
+
+    inp2Node.setAttribute("onclick", "localStorage.removeItem('item2');item2.value=''");
+    item2.value = localStorage.getItem('item2');
+    item2.onInput = () => {
+        localStorage.setItem('item2', item2.value)
+    };
+
+const jsonString = `
+{
+  "book": "Harry Potter"
+}
+`;
+localStorage.setItem('myJSON', jsonString);
+
+//HTML-ФАЙЛ
+<label for="item">номер страницы:</label>
+   <input type="number" id="item1" class="inp1 j-num" name="item"/>
+   <label for="item2">лимит:</label>
+   <input type="number" class="inp2 j-lim" id="item" name="item"/>
+
+   <button class="btn j-btn-request" type="submit">запрос:</button>
+   <br>
+   <div class="result j-result">Здесь будет результат запроса:</div>
+
+//CSS-ФАЙЛ
+.btn {
+  background-color: orange;
+  border: 0px;
+  border-radius: 30px;
+  color: white;
+  width: ;
+  height: 40px;
+}
+.result {
+  width: 100%;
+  margin-top: 20px;
+}
+.card {
+  display: inline-block;
+}
+.card-image {
+ width: 300px;
+ height: 200px;
+ margin: 20px;
+ margin-left: 0;
+}
+#item1, #item2 {
+  margin-right: 20px;
+}
